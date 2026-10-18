@@ -50,7 +50,7 @@ Run these from the repo root:
 
 ## Versioning
 
-Refuge Presenter follows [Semantic Versioning](https://semver.org/). Releases are cut manually with the **Release** workflow in the Actions tab, which runs [release-please](https://github.com/googleapis/release-please). Each run reads the Conventional Commit titles merged into `main` and opens or updates a release pull request with the next version and an updated `CHANGELOG.md`. After merging that pull request, run the workflow once more to tag the release (`vX.Y.Z`) and publish it on GitHub.
+Refuge Presenter follows [Semantic Versioning](https://semver.org/). [release-please](https://github.com/googleapis/release-please) reads the Conventional Commit titles merged into `main` and keeps a release pull request open with the next version and an updated `CHANGELOG.md`. Merging that pull request tags the release (`vX.Y.Z`) and publishes it on GitHub.
 
 The version lives in the root `package.json`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/Cargo.toml`, and release-please updates all three. The desktop app reads its version from `apps/desktop/package.json`. Before 1.0, breaking changes bump the minor version.
 
