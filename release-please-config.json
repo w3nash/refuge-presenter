@@ -19,6 +19,7 @@
           "jsonpath": "$.package.version"
         }
       ],
+      "exclude-paths": ["apps/web"],
       "initial-version": "0.1.0"
     }
   }
