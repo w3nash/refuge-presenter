@@ -93,7 +93,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.release-please.outputs.tag_name }}
-        run: echo "id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" -q .id)" >> "$GITHUB_OUTPUT"
+        # An empty ID would send tauri-action down the tagName path above, so
+        # the step fails instead of continuing without one.
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" -q .id)
+          if [ -z "$id" ]; then
+            echo "::error::No GitHub release found for tag $TAG"
+            exit 1
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
       # tauri-apps/tauri-action action-v1.0.0. Builds the installers, signs the
       # updater bundles, and uploads both plus latest.json to the release.
       - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f
