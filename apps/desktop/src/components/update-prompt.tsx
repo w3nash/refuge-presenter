@@ -29,6 +29,8 @@ type State =
       total: number | undefined
     }
   | { status: "failed"; update: Update; message: string }
+  // The new version is on disk; only the restart is pending or failed.
+  | { status: "installed"; update: Update; restartError: string | null }
 
 /**
  * The notes are release-please's CHANGELOG Markdown, e.g.
@@ -104,17 +106,32 @@ export function UpdatePrompt() {
           }
         })
       })
-      await relaunch()
     } catch (error) {
       setState({
         status: "failed",
         update,
         message: error instanceof Error ? error.message : String(error),
       })
+      return
+    }
+    setState({ status: "installed", update, restartError: null })
+    await restart()
+  }
+
+  async function restart() {
+    try {
+      await relaunch()
+    } catch (error) {
+      setState({
+        status: "installed",
+        update,
+        restartError: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
   const installing = state.status === "installing"
+  const installed = state.status === "installed"
   const percent =
     installing && state.total
       ? Math.min(100, Math.round((state.downloaded / state.total) * 100))
@@ -129,10 +146,13 @@ export function UpdatePrompt() {
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Update available</AlertDialogTitle>
+          <AlertDialogTitle>
+            {installed ? "Update installed" : "Update available"}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Refuge Presenter {update.version} is ready to install. You have{" "}
-            {update.currentVersion}.
+            {installed
+              ? `Refuge Presenter ${update.version} is installed. Restart the app to finish updating.`
+              : `Refuge Presenter ${update.version} is ready to install. You have ${update.currentVersion}.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -155,13 +175,26 @@ export function UpdatePrompt() {
           </p>
         ) : null}
 
+        {installed && state.restartError ? (
+          <p className="text-sm text-destructive">
+            Refuge Presenter couldn&apos;t restart itself: {state.restartError}.
+            Quit and reopen it to use the new version.
+          </p>
+        ) : null}
+
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={installing}>Later</AlertDialogCancel>
+          <AlertDialogCancel disabled={installing}>
+            {installed ? "Restart later" : "Later"}
+          </AlertDialogCancel>
           <AlertDialogAction
             disabled={installing}
-            onClick={() => void install()}
+            onClick={() => void (installed ? restart() : install())}
           >
-            {state.status === "failed" ? "Try again" : "Install and restart"}
+            {installed
+              ? "Restart now"
+              : state.status === "failed"
+                ? "Try again"
+                : "Install and restart"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
