@@ -42,7 +42,7 @@ Shared UI goes in `packages/ui` so both apps can use it. Add shadcn components w
 
 Pull requests are squash-merged, so the pull request title becomes the commit on `main`. A check requires it to follow [Conventional Commits](https://www.conventionalcommits.org/): `feat: add slide transitions`, `fix(desktop): keep output window on top`. Scopes are optional; use the package name (`desktop`, `web`, `ui`) when the change is limited to one.
 
-The type sets the next version: `fix` releases a patch, `feat` a minor version, and a `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer marks a breaking change. Commits inside a pull request can use any message.
+The type sets the next version: `fix` releases a patch, `feat` a minor version, and a `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer marks a breaking change. Commits inside a pull request can use any message. Pull requests that only change `apps/web` don't affect the version, since it tracks the desktop app.
 
 ## Contributor License Agreement
 

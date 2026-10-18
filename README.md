@@ -54,6 +54,8 @@ Refuge Presenter follows [Semantic Versioning](https://semver.org/). [release-pl
 
 The version lives in the root `package.json`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/Cargo.toml`, and release-please updates all three. The desktop app reads its version from `apps/desktop/package.json`. Before 1.0, breaking changes bump the minor version.
 
+The version tracks the desktop app. Commits that only change `apps/web` (the docs and marketing site) are left out of version bumps and the changelog; a commit that also touches the desktop app or `packages/ui` still counts.
+
 ## UI components
 
 Components live in `packages/ui` and both apps import them from `@workspace/ui`:
