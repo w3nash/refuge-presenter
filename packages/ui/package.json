@@ -33,7 +33,7 @@
     "@tailwindcss/vite": "^4",
     "@tanstack/eslint-config": "latest",
     "@turbo/gen": "^2.11.7",
-    "@types/node": "^22",
+    "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^10",
