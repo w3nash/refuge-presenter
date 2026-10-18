@@ -1,11 +1,11 @@
 name: Release
 
-# Keeps a release PR open that bumps the version and updates CHANGELOG.md from
-# Conventional Commits on main. Merging it tags vX.Y.Z and publishes a GitHub
-# release. No build artifacts are produced.
+# Run manually from the Actions tab. Each run opens or updates the release PR
+# that bumps the version and updates CHANGELOG.md from the Conventional Commits
+# on main. After merging that PR, run this workflow once more to tag vX.Y.Z
+# and publish the GitHub release. No build artifacts are produced.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
