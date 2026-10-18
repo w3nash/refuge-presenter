@@ -26,6 +26,8 @@
     "@tanstack/react-router-devtools": "1.167.2",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "~2",
+    "@tauri-apps/plugin-updater": "~2",
     "@workspace/ui": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -4,6 +4,16 @@ Refuge Presenter is a church presentation tool for running lyrics, scripture, an
 
 The project is in early development.
 
+## Download
+
+Installers for macOS, Windows, and Linux are attached to each [GitHub release](https://github.com/w3nash/refuge-presenter/releases). Once installed, the app checks for new releases at launch and offers to update itself.
+
+The builds aren't code-signed yet, so the operating system warns on first launch:
+
+- **macOS:** after the first attempt to open the app is blocked, go to System Settings > Privacy & Security and click **Open Anyway**.
+- **Windows:** when SmartScreen says "Windows protected your PC", click **More info**, then **Run anyway**.
+- **Linux:** make the AppImage executable (`chmod +x`) or install the `.deb`/`.rpm` package.
+
 ## Repository layout
 
 | Path           | What it is                                                      |
@@ -50,7 +60,7 @@ Run these from the repo root:
 
 ## Versioning
 
-Refuge Presenter follows [Semantic Versioning](https://semver.org/). [release-please](https://github.com/googleapis/release-please) reads the Conventional Commit titles merged into `main` and keeps a release pull request open with the next version and an updated `CHANGELOG.md`. Merging that pull request tags the release (`vX.Y.Z`) and publishes it on GitHub.
+Refuge Presenter follows [Semantic Versioning](https://semver.org/). [release-please](https://github.com/googleapis/release-please) reads the Conventional Commit titles merged into `main` and keeps a release pull request open with the next version and an updated `CHANGELOG.md`. Merging that pull request tags the release (`vX.Y.Z`) and publishes it on GitHub. The Release workflow then builds the desktop installers for each platform and attaches them, together with the `latest.json` file the in-app updater reads. Expect the installers to appear about 15 to 20 minutes after the release.
 
 The version lives in the root `package.json`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/Cargo.toml`, and release-please updates all three. The desktop app reads its version from `apps/desktop/package.json`. Before 1.0, breaking changes bump the minor version.
 
