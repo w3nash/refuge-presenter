@@ -18,7 +18,8 @@
           "path": "apps/desktop/src-tauri/Cargo.toml",
           "jsonpath": "$.package.version"
         }
-      ]
+      ],
+      "initial-version": "0.1.0"
     }
   }
 }
