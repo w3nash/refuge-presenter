@@ -1,0 +1,12 @@
+dist/
+node_modules/
+.turbo/
+.output/
+.nitro/
+.tanstack/
+.vinxi/
+coverage/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+**/routeTree.gen.ts
+CHANGELOG.md

@@ -1,0 +1,6 @@
+dist/
+.tanstack/
+.turbo/
+src/routeTree.gen.ts
+src-tauri/target/
+src-tauri/gen/

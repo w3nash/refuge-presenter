@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a feature or an improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you need to do?
+      description: The task or situation during a service or rehearsal, and what makes it hard today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help?
+      description: How you picture it working. If ProPresenter or another tool already does this, describe how it works there.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you use now
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or references

@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in Refuge Presenter doesn't work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Report security issues privately as described in the [security policy](https://github.com/w3nash/refuge-presenter/blob/main/SECURITY.md), not here.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - Desktop app
+        - Website or docs
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a presentation
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Refuge Presenter version or commit
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 26.1, Windows 11 24H2, Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Logs, screenshots, or recordings
+      description: Anything else that helps, including how many screens or outputs were connected.
