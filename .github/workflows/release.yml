@@ -21,6 +21,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      body: ${{ steps.release.outputs.body }}
     steps:
       # googleapis/release-please-action v5.0.0
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7
@@ -37,6 +38,9 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
+      # tauri-action updates latest.json by download, merge, delete, and
+      # re-upload. Parallel jobs can overwrite each other's platform entry.
+      max-parallel: 1
       matrix:
         include:
           - name: macOS Apple Silicon
@@ -81,9 +85,17 @@ jobs:
           workspaces: apps/desktop/src-tauri
           key: ${{ matrix.target }}
       - run: bun install --frozen-lockfile
-      # tauri-apps/tauri-action action-v1.0.0. Builds unsigned installers,
-      # signs the updater bundles, and uploads both plus latest.json to the
-      # release release-please just published.
+      # Passing releaseId keeps tauri-action from rewriting the release's name
+      # and notes, which it does for an existing release found by tagName.
+      - name: Find release ID
+        id: gh-release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: echo "id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" -q .id)" >> "$GITHUB_OUTPUT"
+      # tauri-apps/tauri-action action-v1.0.0. Builds the installers, signs the
+      # updater bundles, and uploads both plus latest.json to the release.
       - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,6 +104,10 @@ jobs:
         with:
           projectPath: apps/desktop
           tauriScript: bun tauri
+          releaseId: ${{ steps.gh-release.outputs.id }}
+          # Download URLs in latest.json point at this tag, not releases/latest.
           tagName: ${{ needs.release-please.outputs.tag_name }}
+          # Only used as the update notes in latest.json when releaseId is set.
+          releaseBody: ${{ needs.release-please.outputs.body }}
           args: ${{ matrix.args }}
           updaterJsonPreferNsis: true

@@ -31,6 +31,28 @@ type State =
   | { status: "failed"; update: Update; message: string }
 
 /**
+ * The notes are release-please's CHANGELOG Markdown, e.g.
+ * `* **desktop:** add updater ([#8](url)) ([1a2b3c4](url))`. The dialog shows
+ * them as plain text: headings and emphasis lose their markers, bullets
+ * become "•", links keep their text, and commit hash links are dropped.
+ */
+function releaseNotesToText(markdown: string) {
+  return markdown
+    .split("\n")
+    .map((line) =>
+      line
+        .replace(/^#{1,6}\s+/, "")
+        .replace(/^\s*[*-]\s+/, "• ")
+        .replace(/\s*\(\[[0-9a-f]{7,40}\]\([^)]*\)\)/g, "")
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+    )
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+/**
  * Checks GitHub Releases for a newer signed build once per launch and offers
  * to install it. Dev builds and the browser-only frontend skip the check.
  */
@@ -116,7 +138,7 @@ export function UpdatePrompt() {
 
         {update.body ? (
           <p className="max-h-40 overflow-y-auto text-sm whitespace-pre-line text-muted-foreground">
-            {update.body}
+            {releaseNotesToText(update.body)}
           </p>
         ) : null}
 
