@@ -2,22 +2,120 @@ name: Release
 
 # Keeps a release PR open that bumps the version and updates CHANGELOG.md from
 # Conventional Commits on main. Merging it tags vX.Y.Z and publishes a GitHub
-# release. No build artifacts are produced.
+# release, then the desktop job attaches unsigned installers for macOS,
+# Windows, and Linux plus the latest.json file the in-app updater reads.
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      body: ${{ steps.release.outputs.body }}
     steps:
       # googleapis/release-please-action v5.0.0
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      # tauri-action updates latest.json by download, merge, delete, and
+      # re-upload. Parallel jobs can overwrite each other's platform entry.
+      max-parallel: 1
+      matrix:
+        include:
+          - name: macOS Apple Silicon
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - name: macOS Intel
+            runner: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          # 22.04 keeps the AppImage compatible with older glibc versions.
+          - name: Linux
+            runner: ubuntu-22.04
+            target: ""
+            args: ""
+          - name: Windows
+            runner: windows-latest
+            target: ""
+            args: ""
+    runs-on: ${{ matrix.runner }}
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      # https://v2.tauri.app/start/prerequisites/#linux
+      - name: Install Tauri system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      # oven-sh/setup-bun v2.2.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      # dtolnay/rust-toolchain, stable channel
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      # Swatinem/rust-cache v2.9.2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: ${{ matrix.target }}
+      - run: bun install --frozen-lockfile
+      # Passing releaseId keeps tauri-action from rewriting the release's name
+      # and notes, which it does for an existing release found by tagName.
+      - name: Find release ID
+        id: gh-release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        # An empty ID would send tauri-action down the tagName path above, so
+        # the step fails instead of continuing without one.
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" -q .id)
+          if [ -z "$id" ]; then
+            echo "::error::No GitHub release found for tag $TAG"
+            exit 1
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      # tauri-apps/tauri-action action-v1.0.0. Builds the installers, signs the
+      # updater bundles, and uploads both plus latest.json to the release.
+      - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: bun tauri
+          releaseId: ${{ steps.gh-release.outputs.id }}
+          # Download URLs in latest.json point at this tag, not releases/latest.
+          tagName: ${{ needs.release-please.outputs.tag_name }}
+          # Only used as the update notes in latest.json when releaseId is set.
+          releaseBody: ${{ needs.release-please.outputs.body }}
+          args: ${{ matrix.args }}
+          updaterJsonPreferNsis: true

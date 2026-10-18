@@ -42,3 +42,21 @@ bunx --bun shadcn@latest add <component> -c apps/desktop
 ## Rust side
 
 `src-tauri` holds the Tauri app (`src/lib.rs`), its config (`tauri.conf.json`), and permissions (`capabilities/`). See the [Tauri v2 docs](https://v2.tauri.app/).
+
+## Releases and updates
+
+The Release workflow (`.github/workflows/release.yml`) builds installers for macOS (Apple Silicon and Intel), Windows, and Linux whenever release-please publishes a release, and uploads them with `latest.json`.
+
+The installers don't carry a paid OS code signature yet. macOS builds are ad-hoc signed (`bundle.macOS.signingIdentity: "-"` in `tauri.conf.json`), so Apple Silicon Macs show the "unidentified developer" prompt that **Open Anyway** clears, instead of reporting the app as damaged. Removing the warnings needs an Apple Developer ID on macOS and a code-signing certificate on Windows, for example through the free [SignPath Foundation](https://signpath.org) program for open source projects.
+
+The app checks `https://github.com/w3nash/refuge-presenter/releases/latest/download/latest.json` once at launch (`src/components/update-prompt.tsx`) and offers to install a newer version. Development builds and the browser-only frontend skip the check.
+
+Updates are verified with a minisign key pair, separate from OS code signing:
+
+- The public key is `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`.
+- CI signs with the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository secrets.
+- `requireSignedVersion` is on, so an update is rejected unless its signature also covers the announced version, which blocks forced downgrades.
+
+If the private key is lost, installed copies can no longer receive updates, and users have to reinstall a build with a new public key. Keep a backup of it outside this machine.
+
+To produce signed updater bundles locally, export both variables before `bun run build`. `.env` files aren't read for these.
